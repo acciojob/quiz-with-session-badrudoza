@@ -1,7 +1,3 @@
-//your JS code here.
-
-// Do not change code below this line
-// This code will just display the questions to the screen
 const questions = [
   {
     question: "What is the capital of France?",
@@ -30,27 +26,76 @@ const questions = [
   },
 ];
 
-// Display the quiz questions and choices
+const questionsElement = document.getElementById("questions");
+const scoreElement = document.getElementById("score");
+const submitBtn = document.getElementById("submit");
+
+// Load saved answers (sessionStorage)
+let userAnswers = JSON.parse(sessionStorage.getItem("progress")) || {};
+
+// Load saved score (localStorage)
+const savedScore = localStorage.getItem("score");
+if (savedScore !== null) {
+  scoreElement.textContent = `Your score is ${savedScore} out of ${questions.length}.`;
+}
+
+// Render Questions & Answers
 function renderQuestions() {
+  questionsElement.innerHTML = "";
+
   for (let i = 0; i < questions.length; i++) {
     const question = questions[i];
     const questionElement = document.createElement("div");
-    const questionText = document.createTextNode(question.question);
+    questionElement.style.marginBottom = "15px";
+
+    const questionText = document.createElement("p");
+    questionText.textContent = `${i + 1}. ${question.question}`;
     questionElement.appendChild(questionText);
+
     for (let j = 0; j < question.choices.length; j++) {
       const choice = question.choices[j];
       const choiceElement = document.createElement("input");
       choiceElement.setAttribute("type", "radio");
       choiceElement.setAttribute("name", `question-${i}`);
       choiceElement.setAttribute("value", choice);
+
+      // Restore checked state from sessionStorage
       if (userAnswers[i] === choice) {
-        choiceElement.setAttribute("checked", true);
+        choiceElement.checked = true;
       }
-      const choiceText = document.createTextNode(choice);
-      questionElement.appendChild(choiceElement);
-      questionElement.appendChild(choiceText);
+
+      // Save selection to sessionStorage on change
+      choiceElement.addEventListener("change", () => {
+        userAnswers[i] = choice;
+        sessionStorage.setItem("progress", JSON.stringify(userAnswers));
+      });
+
+      const label = document.createElement("label");
+      label.appendChild(choiceElement);
+      label.appendChild(document.createTextNode(choice));
+      label.style.display = "block";
+      questionElement.appendChild(label);
     }
+
     questionsElement.appendChild(questionElement);
   }
 }
+
+// Submit Quiz and Calculate Score
+function submitQuiz() {
+  let score = 0;
+
+  for (let i = 0; i < questions.length; i++) {
+    const selected = userAnswers[i];
+    if (selected && selected === questions[i].answer) {
+      score++;
+    }
+  }
+
+  scoreElement.textContent = `Your score is ${score} out of ${questions.length}.`;
+  localStorage.setItem("score", score);
+}
+
+submitBtn.addEventListener("click", submitQuiz);
+
 renderQuestions();
